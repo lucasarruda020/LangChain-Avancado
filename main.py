@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 import os
-import getpass
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
@@ -11,9 +10,8 @@ from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
 os.environ.get("CHAVE_API_OPENAI")
-os.environ.get("base_url")
-os.environ.get("api_key")
-
+os.getenv("LANGSMITH_API_KEY")
+os.getenv("LANGCHAIN_TRACING_V2")
 api_key = os.getenv("CHAVE_API_OPENAI")
 
 documento = TextLoader("documentos/GTB_gold_Nov23.txt", encoding="utf-8").load()
