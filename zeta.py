@@ -16,7 +16,12 @@ from langchain_ollama import OllamaEmbeddings
 # chamando modelo do ollama
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.output_parsers import CommaSeparatedListOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+# Chain mais complexas
+from langchain_core.runnables import RunnablePassthrough
+# Prompt de template comum 
+from langchain_core.prompts import PromptTemplate
 
 modelo = OllamaLLM(model="gemma3:4b")
 
@@ -57,4 +62,54 @@ cadeia = prompt | modelo | StrOutputParser()
 
 llm_generate = cadeia.invoke({"query": pergunta, "contexto": contexto})
 
-print(llm_generate)
+# cadeia completa do langchain! 
+rag_chain = (
+    {
+        "contexto": RunnablePassthrough() | retriever,
+        "query": RunnablePassthrough()
+    } | prompt | modelo | StrOutputParser()
+)
+
+rag_chain.invoke(pergunta)
+
+# Rewrite-Retrieve-Read
+
+query_model = OllamaLLM(model="gemma3:1b")
+
+rewrite_Retrieve_Read = """
+Gere consulta de pesquisa para o banco de dados de vetores (Vector DB) a partir de ua pergunta do usuario
+
+pergunta do usuario: {user_question}
+consulta revisada do Vector DB:
+"""
+
+rewriter_prompt = PromptTemplate.from_template(rewrite_Retrieve_Read)
+
+rewriter_chain = rewriter_prompt | query_model | StrOutputParser()
+
+rewriter_chain.invoke(pergunta)
+
+
+rewritter_rag_chain = (
+    {
+        "contexto": RunnablePassthrough() | rewriter_chain | retriever,
+        "query": RunnablePassthrough()
+    } | prompt | modelo | StrOutputParser()
+)
+
+rewritter_rag_chain.invoke(pergunta)
+
+## Generating Multiple queries
+
+multi_query_prompt_template = """
+Voce e um assistente de modelo de linguagem de IA. Sua tarefa e gerar versoes diferentes da pergunta do usuario para recuperar documentos relevantes de um banco de dados vetorial
+ao gerar multiplas perspectivas sobre a pergunta do usuario
+Pergunta original: {question}
+
+"""
+
+multi_query_prompt = PromptTemplate.from_template(multi_query_prompt_template)
+
+
+
+multi_query_chain = multi_query_prompt | llm || CommaSeparatedListOutputParser()
