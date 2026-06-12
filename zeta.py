@@ -173,6 +173,7 @@ def avaliar(perguntas_respostas, geracoes):
     avaliacoes = eval_chain(perguntas_respostas, geracoes)
     corretas = 0
     for i in enumerate(perguntas_respostas):
+        print(avaliacoes[i])
         corretas = corretas + (1 if avaliacoes[i]["results"].split("\n")[-1].split(":")[-1].strip() == "CORRECT" else 0)
     return corretas/len(perguntas_respostas)
 
@@ -196,3 +197,11 @@ for pr in perguntas_resposta[:10]:
 geracoes_sem_rag2 = [{"result": g["result"].content} for g in geracoes_sem_rag]
 
 avaliar(perguntas_resposta[:10], geracoes_sem_rag2)
+
+
+geracoes_multi_rag = []
+
+for pr in perguntas_resposta[:10]:
+    geracoes_sem_rag.append({"result": modelo.invoke(pr["query"])})
+
+avaliar(perguntas_resposta[:10], geracoes_multi_rag)
